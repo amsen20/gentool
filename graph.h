@@ -1,7 +1,7 @@
 #include "rand.h"
 #include<bits/stdc++.h>
 
-using namespace std; // TODO erease it
+using namespace std; // TODO erase it
 
 struct graph{ // TODO use template for edges
     int n, m;
@@ -81,11 +81,12 @@ struct graph{ // TODO use template for edges
 /*
     * pure function
     * O(n) (or O(nlgn) if SSE)
+    * t: how near to star should be tree. (100 star, -100 path)
 */
-graph add_tree(const graph &gr){
+graph add_tree(const graph &gr, int t=0){
     graph ret = gr;
     for(int i=1 ; i<gr.n ; i++){
-        int to = rnd.next(i);
+        int to = rnd.wnext(i, t);
         ret.add_edge(to, i);
     }
     return ret;
