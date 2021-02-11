@@ -70,6 +70,13 @@ struct graph{
             build_sg();
     }
 
+    void extend(int new_n){
+        if(new_n < n)
+            throw "new graph's vertices size must be bigger than current size.";
+        g.resize(new_n, vector<ie>());
+        sg.resize(new_n, set<int>());
+    }
+
     bool custom_add_edge(int v, int u, Ed *e){ // TODO take care of direcred graphs
         if(!SL && v == u)
             return false;
@@ -89,13 +96,15 @@ struct graph{
         return custom_add_edge(v, u, new Ed(v, u));
     }
 
-    vector<Ed> get_edges() const { // TODO take care of directed graphs
-        set<Ed> st;
+    vector<tuple<Ed*, int, int> > get_edges() const { // TODO take care of directed graphs
+        set<tuple<Ed*, int, int> > st;
         for(int i=0 ; i<n ; i++)
-            for(auto j : g[i])
-                if(!st.count(*j.second))
-                    st.insert(*j.second);
-        vector<Ed> ret;
+            for(auto j : g[i]){
+                auto cur = make_tuple(j.second, min(i, j.first), max(i, j.first));
+                if(!st.count(cur))
+                    st.insert(cur);
+            }
+        vector<tuple<Ed*, int, int> > ret;
         for(auto i : st)
             ret.push_back(i);
         return ret;
@@ -130,7 +139,7 @@ graph<Ed> add_tree(
 }
 
 template<typename Ed>
-bool add_random_simple_edge(
+bool addRandomSimpleEdge(
     graph<Ed> &gr,
     function<Ed*(int v, int u)> edge_generator=default_edge_generator
     ){
@@ -143,8 +152,36 @@ bool add_random_simple_edge(
     return true;
 }
 
+/*
+    * not pure function
+    * O(B.n + B.m) (*log(A))
+*/
+template<typename Ed>
+bool concatGraphs(graph<Ed> &A, const graph<Ed> &B){
+    A.extend(A.n + B.n);
+    int offset = A.n;
+    for(auto e : B.get_edges())
+        if(
+            !A.custom_add_edge(get<1>(e) + offset, get<2>(e) + offset, new Ed( get<0>(e) ))
+        )
+            return false;
+    return true;
+}
+
+/*
+    * pure function
+    * O(A.n + A.m + B.n + B.m) (*log(A))
+*/
+template<typename Ed>
+graph<Ed> concat_graphs(const graph<Ed> &A, const graph<Ed> &B){
+    graph<Ed> ret; // TODO take care of configs
+    concatGraphs(ret, A);
+    concatGraphs(ret, B);
+    return ret;
+}
+
 void print(const SimpleGraph& gr){
     cout << gr.n << " " << gr.m << "\n";
     for(auto i : gr.get_edges())
-        cout << i.first+1 << " " << i.second+1 << "\n";
+        cout << get<0>(i)->first+1 << " " << get<0>(i)->second+1 << "\n";
 }
