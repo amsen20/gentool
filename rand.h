@@ -1,9 +1,9 @@
 #include<bits/stdc++.h>
 
-using namespace std;
+using namespace std; // TODO erase it
 
 #ifdef USE_TESTLIB
-// TODO use testlib here
+#include "testlib.h"
 #else
 struct randgen{
     int next(int n){
