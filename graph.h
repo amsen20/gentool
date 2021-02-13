@@ -20,12 +20,41 @@ struct SimpleEdge{
     }
 };
 
+struct WeightedEdge{
+    int v, u, w;
+    static int minWeight, maxWeight; // [minWeight, maxWeight)
+    WeightedEdge():
+        v(-1), u(-1), w(-1) {}
+    
+    WeightedEdge(int v, int u):
+        v(v), u(u) {
+            w = rnd.next(maxWeight-minWeight) + minWeight;
+        }
+    
+    WeightedEdge(int v, int u, int w):
+        v(v), u(u), w(w) {}
+    
+    WeightedEdge(const WeightedEdge& other){
+        v = other.v;
+        u = other.u;
+        w = other.w;
+    }
+};
+
+int WeightedEdge::minWeight = 1;
+int WeightedEdge::maxWeight = 1e9;
+
 template<typename Ed>
 Ed shift_up(const Ed &ed, int shift){
     Ed ret = Ed(ed);
     ret.v += shift;
     ret.u += shift;
     return ret;
+}
+
+void setWeightBound(int mn, int mx){
+    WeightedEdge::minWeight = mn;
+    WeightedEdge::maxWeight = mx;
 }
 
 template<typename Ed>
@@ -139,6 +168,8 @@ struct graph{
 
 // simple graph
 typedef graph<SimpleEdge> SimpleGraph;
+// weighted graph
+typedef graph<WeightedEdge> WeightedGraph;
 
 template<typename Ed>
 Ed *default_edge_generator(int v, int u){
@@ -165,9 +196,9 @@ graph<Ed> add_tree(
 }
 
 template<typename Ed>
-bool addRandomSimpleEdge(
+bool addRandomEdge(
     graph<Ed> &gr,
-    function<Ed*(int v, int u)> edge_generator=default_edge_generator
+    function<Ed*(int v, int u)> edge_generator=default_edge_generator<Ed>
     ){
     // TODO check if edges are a lot use another method
     int v, u;
@@ -213,4 +244,10 @@ void print(const SimpleGraph& gr){
     cout << gr.n << " " << gr.m << "\n";
     for(auto i : gr.get_edges())
         cout << get<0>(i)->v+1 << " " << get<0>(i)->u+1 << "\n";
+}
+
+void print(const WeightedGraph& gr){
+    cout << gr.n << " " << gr.m << "\n";
+   for(auto i : gr.get_edges())
+        cout << get<0>(i)->v+1 << " " << get<0>(i)->u+1 << " " << get<0>(i)->w << "\n";
 }
