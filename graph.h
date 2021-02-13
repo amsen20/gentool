@@ -3,6 +3,31 @@
 
 using namespace std; // TODO erase it
 
+/*
+    * all edges struct must have v and u
+*/
+struct SimpleEdge{
+    int v, u;
+    SimpleEdge():
+        v(-1), u(-1) {}
+    
+    SimpleEdge(int v, int u):
+        v(v), u(u) {}
+    
+    SimpleEdge(const SimpleEdge& other){
+        v = other.v;
+        u = other.u;
+    }
+};
+
+template<typename Ed>
+Ed shift_up(const Ed &ed, int shift){
+    Ed ret = Ed(ed);
+    ret.v += shift;
+    ret.u += shift;
+    return ret;
+}
+
 template<typename Ed>
 struct graph{
 
@@ -12,7 +37,7 @@ struct graph{
     vector<vector<ie> > g; // TODO add matrix
     vector<set<int> > sg;
     /*
-        * can be turned it off
+        * can be turned off
         * Store Edges Efficient
     */
     bool SEE = true;
@@ -27,7 +52,7 @@ struct graph{
 
     void build_sg(){
         assert(SEE);
-        sg = vector<set<ie> >(n, set<ie>());
+        sg = vector<set<int> >(n, set<int>());
         for(int i=0 ; i<n ; i++){
             sg.push_back(set<int>());
             sg[i].clear();
@@ -75,6 +100,7 @@ struct graph{
             throw "new graph's vertices size must be bigger than current size.";
         g.resize(new_n, vector<ie>());
         sg.resize(new_n, set<int>());
+        n = new_n;
     }
 
     bool custom_add_edge(int v, int u, Ed *e){ // TODO take care of direcred graphs
@@ -112,7 +138,7 @@ struct graph{
 };
 
 // simple graph
-typedef graph<pair<int, int> > SimpleGraph;
+typedef graph<SimpleEdge> SimpleGraph;
 
 template<typename Ed>
 Ed *default_edge_generator(int v, int u){
@@ -128,7 +154,7 @@ template<typename Ed>
 graph<Ed> add_tree(
     const graph<Ed> &gr,
     int t=0,
-    function<Ed*(int v, int u)> edge_generator=default_edge_generator
+    function<Ed*(int v, int u)> edge_generator=default_edge_generator<Ed>
     ){
     graph<Ed> ret = gr;
     for(int i=1 ; i<gr.n ; i++){
@@ -158,11 +184,12 @@ bool addRandomSimpleEdge(
 */
 template<typename Ed>
 bool concatGraphs(graph<Ed> &A, const graph<Ed> &B){
-    A.extend(A.n + B.n);
+    // TODO check configs are same
     int offset = A.n;
+    A.extend(A.n + B.n);
     for(auto e : B.get_edges())
         if(
-            !A.custom_add_edge(get<1>(e) + offset, get<2>(e) + offset, new Ed( get<0>(e) ))
+            !A.custom_add_edge(get<1>(e) + offset, get<2>(e) + offset, new Ed( shift_up(*get<0>(e), offset) ))
         )
             return false;
     return true;
@@ -174,14 +201,16 @@ bool concatGraphs(graph<Ed> &A, const graph<Ed> &B){
 */
 template<typename Ed>
 graph<Ed> concat_graphs(const graph<Ed> &A, const graph<Ed> &B){
-    graph<Ed> ret; // TODO take care of configs
-    concatGraphs(ret, A);
-    concatGraphs(ret, B);
+    auto ret = graph<Ed>(0); // TODO take care of configs
+    if(!concatGraphs(ret, A))
+        throw "concat unsuccessful";
+    if(!concatGraphs(ret, B))
+        throw "concat unsuccessful";
     return ret;
 }
 
 void print(const SimpleGraph& gr){
     cout << gr.n << " " << gr.m << "\n";
     for(auto i : gr.get_edges())
-        cout << get<0>(i)->first+1 << " " << get<0>(i)->second+1 << "\n";
+        cout << get<0>(i)->v+1 << " " << get<0>(i)->u+1 << "\n";
 }
