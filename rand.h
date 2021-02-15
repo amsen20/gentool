@@ -2,9 +2,6 @@
 
 using namespace std; // TODO erase it
 
-#ifdef USE_TESTLIB
-#include "testlib.h"
-#else
 struct randgen{
     int next(int n){
         return rand()%n;
@@ -17,4 +14,8 @@ struct randgen{
         return next(n);
     }
 } rnd;
-#endif
+
+template<class RandomAccessIterator>
+void shuffle(RandomAccessIterator begin, RandomAccessIterator end){
+    random_shuffle(begin, end);
+}
