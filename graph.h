@@ -1,4 +1,10 @@
+//#define USE_TESTLIB
+#ifdef USE_TESTLIB
+#include "testlib.h"
+#else
 #include "rand.h"
+#endif
+
 #include<bits/stdc++.h>
 
 using namespace std; // TODO erase it
@@ -49,6 +55,14 @@ Ed shift_up(const Ed &ed, int shift){
     Ed ret = Ed(ed);
     ret.v += shift;
     ret.u += shift;
+    return ret;
+}
+
+template<typename Ed>
+Ed transform(const Ed &ed, const vector<int> &p){
+    Ed ret = Ed(ed);
+    ret.v = p[ret.v];
+    ret.u = p[ret.u];
     return ret;
 }
 
@@ -238,6 +252,37 @@ graph<Ed> concat_graphs(const graph<Ed> &A, const graph<Ed> &B){
     if(!concatGraphs(ret, B))
         throw "concat unsuccessful";
     return ret;
+}
+
+/*
+    * pure function
+    * O(gr.n) (*log(gr))
+*/
+template<typename Ed>
+graph<Ed> shuffle_graph(const graph<Ed> &gr){
+    vector<int> p;
+    for(int i=0 ; i<gr.n ; i++)
+        p.push_back(i);
+    shuffle(p.begin(), p.end());
+
+    graph<Ed> ret(gr.n);
+    for(auto e : gr.get_edges()){
+        if(!
+            ret.custom_add_edge(p[ get<1>(e) ], p[ get<2>(e) ], new Ed( transform( *get<0>(e), p ) ))
+        )
+            throw "shuffle unsuccessful";
+    }
+
+    return ret;
+}
+
+/*
+    * same as above
+    * not pure function
+*/
+template<typename Ed>
+bool shuffleGraph(const graph<Ed> &gr){
+    // TODO
 }
 
 void print(const SimpleGraph& gr){
