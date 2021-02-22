@@ -1,3 +1,6 @@
+#ifndef __GENTOOL_RAND_H__
+#define __GENTOOL_RAND_H__
+
 #include<bits/stdc++.h>
 
 using namespace std; // TODO erase it
@@ -19,3 +22,5 @@ template<class RandomAccessIterator>
 void shuffle(RandomAccessIterator begin, RandomAccessIterator end){
     random_shuffle(begin, end);
 }
+
+#endif
