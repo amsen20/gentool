@@ -9,5 +9,8 @@ int main(){
     auto g = concat_graphs(add_tree(g1), add_tree(g2));
     addRandomEdge(g);
     print(g);
-    print(shuffle_graph(g));
+    vector<int> perm;
+    print(shuffle_graph(g, perm));
+    for(int i=0 ; i<perm.size() ; i++)
+        cout << i+1 << " => " << perm[i]+1 << "\n";
 }
