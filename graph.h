@@ -1,3 +1,6 @@
+#ifndef __GENTOOL_GRAPH_H__
+#define __GENTOOL_GRAPH_H__
+
 //#define USE_TESTLIB
 #ifdef USE_TESTLIB
 #include "testlib.h"
@@ -5,6 +8,7 @@
 #include "rand.h"
 #endif
 
+#include "range.h"
 #include<bits/stdc++.h>
 
 using namespace std; // TODO erase it
@@ -161,8 +165,9 @@ struct graph{
         return true;
     }
 
-    bool add_edge(int v, int u){
-        return custom_add_edge(v, u, new Ed(v, u));
+    template<class ...Args>
+    bool add_edge(int v, int u, Args ...args){
+        return custom_add_edge(v, u, new Ed(v, u, args...));
     }
 
     vector<tuple<Ed*, int, int> > get_edges() const { // TODO take care of directed graphs
@@ -190,25 +195,6 @@ Ed *default_edge_generator(int v, int u){
     return new Ed(v, u);
 }
 
-/*
-    * pure function
-    * O(n) (or O(nlgn) if SSE)
-    * t: how near to star should be tree. (100 star, -100 path)
-*/
-template<typename Ed>
-graph<Ed> add_tree(
-    const graph<Ed> &gr,
-    int t=0,
-    function<Ed*(int v, int u)> edge_generator=default_edge_generator<Ed>
-    ){
-    graph<Ed> ret = gr;
-    for(int i=1 ; i<gr.n ; i++){
-        int to = rnd.wnext(i, t);
-        ret.custom_add_edge(to, i, edge_generator(to, i));
-    }
-    return ret;
-}
-
 template<typename Ed>
 bool addRandomEdge(
     graph<Ed> &gr,
@@ -222,6 +208,22 @@ bool addRandomEdge(
     }while(!gr.custom_add_edge(v, u, edge_generator(v, u)));
     return true;
 }
+
+////////////////////////outputs////////////////////////
+
+void print(const SimpleGraph& gr){
+    cout << gr.n << " " << gr.m << "\n";
+    for(auto i : gr.get_edges())
+        cout << get<0>(i)->v+1 << " " << get<0>(i)->u+1 << "\n";
+}
+
+void print(const WeightedGraph& gr){
+    cout << gr.n << " " << gr.m << "\n";
+   for(auto i : gr.get_edges())
+        cout << get<0>(i)->v+1 << " " << get<0>(i)->u+1 << " " << get<0>(i)->w << "\n";
+}
+
+////////////////////////two graph operations////////////////////////
 
 /*
     * not pure function
@@ -255,15 +257,47 @@ graph<Ed> concat_graphs(const graph<Ed> &A, const graph<Ed> &B){
 }
 
 /*
-    * pure function
-    * O(gr.n) (*log(gr))
+    * not pure function
+    * O(B.n + B.m) (*log(A))
 */
 template<typename Ed>
-graph<Ed> shuffle_graph(const graph<Ed> &gr){
-    vector<int> p;
-    for(int i=0 ; i<gr.n ; i++)
-        p.push_back(i);
-    shuffle(p.begin(), p.end());
+bool mergeGraphs(graph<Ed> &A, const graph<Ed> &B){
+    // TODO check configs are same
+    A.extend(max(A.n, B.n));
+    for(auto e : B.get_edges())
+        if(
+            !A.custom_add_edge(get<1>(e), get<2>(e), new Ed(*get<0>(e)))
+        )
+            return false;
+    return true;
+}
+
+/*
+    * pure function
+    * O(A.n + A.m + B.n + B.m) (*log(A))
+*/
+template<typename Ed>
+graph<Ed> merge_graphs(const graph<Ed> &A, const graph<Ed> &B){
+    auto ret = graph<Ed>(0); // TODO take care of configs
+    if(!mergeGraphs(ret, A))
+        throw "merge unsuccessful";
+    if(!mergeGraphs(ret, B))
+        throw "merge unsuccessful";
+    return ret;
+}
+
+/*
+    * mostly pure function (for gr)
+    * O(gr.n + gr.m) (*log(gr))
+*/
+template<typename Ed>
+graph<Ed> shuffle_graph(const graph<Ed> &gr, vector<int> &p){
+    if(p.empty()){
+        for(int i=0 ; i<gr.n ; i++)
+            p.push_back(i);
+        shuffle(p.begin(), p.end());
+    }
+    assert(gr.n == p.size());
 
     graph<Ed> ret(gr.n);
     for(auto e : gr.get_edges()){
@@ -276,6 +310,12 @@ graph<Ed> shuffle_graph(const graph<Ed> &gr){
     return ret;
 }
 
+template<typename Ed>
+graph<Ed> shuffle_graph(const graph<Ed> &gr){
+    vector<int> p;
+    return shuffle_graph(gr, p);
+}
+
 /*
     * same as above
     * not pure function
@@ -285,14 +325,32 @@ bool shuffleGraph(const graph<Ed> &gr){
     // TODO
 }
 
-void print(const SimpleGraph& gr){
-    cout << gr.n << " " << gr.m << "\n";
-    for(auto i : gr.get_edges())
-        cout << get<0>(i)->v+1 << " " << get<0>(i)->u+1 << "\n";
+////////////////////////custom graphs////////////////////////
+
+/*
+    * pure function
+    * O(n) (or O(nlgn) if SSE)
+    * t: how near to star should be tree. (100 star, -100 path)
+*/
+template<typename Ed>
+graph<Ed> tree(
+    vector<int> vertices,
+    int t=0,
+    function<Ed*(int v, int u)> edge_generator=default_edge_generator<Ed>
+    // , TODO config
+    ){
+    auto ret = graph<Ed>(*max_element(vertices.begin(), vertices.end()) + 1);
+    for(int i=1 ; i<ret.n ; i++){
+        int to = rnd.wnext(i, t);
+        int v = vertices[to], u = vertices[i];
+        ret.custom_add_edge(v, u, edge_generator(v, u));
+    }
+    return ret;
 }
 
-void print(const WeightedGraph& gr){
-    cout << gr.n << " " << gr.m << "\n";
-   for(auto i : gr.get_edges())
-        cout << get<0>(i)->v+1 << " " << get<0>(i)->u+1 << " " << get<0>(i)->w << "\n";
+template<typename Ed, class ...Args>
+graph<Ed> add_tree(const graph<Ed> &gr, Args ...args){
+    return merge_graphs(gr, tree<Ed>(rrange(gr.n), args...));
 }
+
+#endif
