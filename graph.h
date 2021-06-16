@@ -110,18 +110,22 @@ struct graph{
         }
     }
 
-    graph():
-        n(-1), m(-1) {
-            g = vector<vector<ie> >();
-        }
-    
-    ~graph(){
+    void free_edges(){
         for(int i=0 ; i<n ; i++)
             for(auto U : g[i]){
                 int u = U.first;
                 if(i < u) // TODO take care of directed graphs
                     delete U.second;
             }
+    }
+
+    graph():
+        n(-1), m(-1) {
+            g = vector<vector<ie> >();
+        }
+    
+    ~graph(){
+        free_edges();
     }
 
     graph(int n):
@@ -132,14 +136,26 @@ struct graph{
         }
 
     graph(const graph &other){
+        operator=(other);
+    }
+
+    graph<Ed>& operator = (const graph<Ed> &other){
         n = other.n;
-        m = other.m;
-        g = other.g;
-        SEE = other.SEE;
+
+        SEE = other.SEE; // TODO change to a sigle int32 conf
         SL = other.SL;
         ME = other.ME;
-        if(SEE)
-            build_sg();
+
+        // copying edges
+        m = 0;
+        free_edges();
+        g = vector<vector<ie> >(n, vector<ie>());
+        for(auto e : other.get_edges())
+            if(
+                !custom_add_edge(get<1>(e), get<2>(e), new Ed(*get<0>(e)))
+            )
+                throw "can't copy graphs.";
+        return *this;
     }
 
     void extend(int new_n){
