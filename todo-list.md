@@ -2,12 +2,15 @@
 + Add something for multiple test problems.
 + Generate random unique integers.
 + Some exception controllers.
++ Maybe validators?!
 
 ## Graph 
 + Add random edge between to sets.
 + Improve graph extention (vertex or edge).
 + Read all some none problem generator and add required features.
 + Delete edge feature.
++ Multiple random edge add.
++ Better print for graph (can be customed).
 
 ## Array
 + Element by element basic operations (+-/*) for arrays.
