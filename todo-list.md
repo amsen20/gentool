@@ -3,6 +3,7 @@
 + Generate random unique integers.
 + Some exception controllers.
 + Maybe validators?!
++ Some features for randomzation like normal distrbuted random function.
 
 ## Graph 
 + Add random edge between to sets.
